@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thermal Engineering Assessment</title>
+<style>
+:root{--navy:#14243a;--blue:#2457a7;--pale:#eef4fb;--ink:#202a36;--muted:#64748b;--border:#d7e0ea;--red:#b42318;--green:#18794e}
+*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:var(--ink);font:16px/1.5 Arial,Helvetica,sans-serif}
+header{background:var(--navy);color:white;padding:18px 24px}header .wrap{max-width:980px;margin:auto}header h1{font-size:1.25rem;margin:0}header p{margin:4px 0 0;color:#d7e5f6;font-size:.92rem}
+main{max-width:900px;margin:26px auto;padding:0 16px 40px}.card{background:white;border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:0 4px 16px #15243a0c;margin-bottom:18px}
+h2{margin:0 0 12px;font-size:1.35rem}h3{font-size:1.05rem;margin:20px 0 8px}.muted{color:var(--muted)}label{display:block;font-weight:600;margin:12px 0 5px}input[type=text],input[type=password],textarea{width:100%;border:1px solid #b9c7d8;border-radius:8px;padding:11px;font:inherit;background:#fff}textarea{min-height:90px;resize:vertical}
+button{border:0;border-radius:8px;padding:11px 17px;font-weight:700;font-size:1rem;cursor:pointer;background:var(--blue);color:white}button.secondary{background:#e7edf5;color:var(--navy)}button:disabled{opacity:.5;cursor:not-allowed}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.row>*{flex:1}
+.notice{padding:12px 14px;border-radius:8px;background:var(--pale);border-left:4px solid var(--blue);margin:12px 0}.warning{background:#fff3f0;border-left-color:var(--red);color:#762018}.success{background:#eaf7ef;border-left-color:var(--green)}
+.pills{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.pill{background:#eef2f7;border-radius:999px;padding:6px 12px;font-weight:700;font-size:.9rem}.timer{color:var(--red);font-variant-numeric:tabular-nums}
+.question{padding:17px 0;border-bottom:1px solid var(--border)}.question:last-child{border-bottom:0}.qtitle{font-weight:700;margin-bottom:9px}.option{display:flex;align-items:flex-start;gap:9px;padding:7px 4px;font-weight:400;cursor:pointer}.option input{margin-top:5px}
+.hidden{display:none!important}.statusline{font-size:.9rem;color:var(--muted)}.score{font-size:2.4rem;font-weight:800;color:var(--navy)}.small{font-size:.86rem}.footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:20px}
+@media(max-width:600px){.card{padding:17px}header{padding:16px}.row{display:block}.row button{width:100%;margin-top:10px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>Thermal Engineering — Online Assessment</h1><p>Mechanical Engineering · Total: 10 marks · Duration: 20 minutes</p></div></header>
+<main>
+<section id="login" class="card">
+  <h2>Student Login</h2>
+  <p class="muted">Enter your details to begin. This is a standalone demonstration; it does not verify credentials against a college server.</p>
+  <form id="loginForm">
+    <label for="studentName">Student name</label><input id="studentName" type="text" autocomplete="name" required maxlength="100" placeholder="Enter full name">
+    <label for="rollNo">Roll number / Registration number</label><input id="rollNo" type="text" required maxlength="40" placeholder="Enter roll number">
+    <label for="accessCode">Assessment access code</label><input id="accessCode" type="password" required maxlength="40" placeholder="Enter code supplied by faculty">
+    <div class="notice"><strong>Before you begin</strong><ul><li>Time limit is 20 minutes; the assessment auto-submits when time expires.</li><li>Switching tabs/windows, leaving the page, exiting full screen, right-clicking, copy/paste, or moving the pointer outside the assessment area is logged as a warning.</li><li>Three logged violations trigger automatic submission.</li><li>Browser-only monitoring is deterrence, not secure proctoring; it cannot reliably detect every form of cheating.</li></ul></div>
+    <label class="option"><input id="agree" type="checkbox" required><span>I understand the assessment rules and monitoring notice.</span></label>
+    <button type="submit">Continue to instructions</button>
+  </form>
+  <p class="small muted">Faculty setup: edit <code>ACCESS_CODE</code> in the HTML file before sharing. Do not use a secret you rely on for security; the code is visible in the source.</p>
+</section>
+
+<section id="instructions" class="card hidden">
+  <h2>Assessment Instructions</h2>
+  <div class="pills"><span class="pill">10 marks</span><span class="pill">20 minutes</span><span class="pill">6 MCQs × 1 mark</span><span class="pill">2 short answers × 2 marks</span></div>
+  <ul><li>Answer all questions. There is no negative marking.</li><li>Short answers are provisionally auto-graded using relevant keywords. Review them manually before using the score for formal grading.</li><li>Keep this page active and stay within the assessment window.</li><li>Click <strong>Start assessment</strong> when ready. The timer starts immediately.</li></ul>
+  <div class="notice warning">Once started, the timer cannot be paused. Do not refresh or close this page.</div>
+  <button id="startBtn">Start assessment</button>
+</section>
+
+<section id="exam" class="hidden">
+  <div class="card">
+    <div class="row"><div><h2>Assessment in progress</h2><div id="studentSummary" class="muted"></div></div><div style="text-align:right"><div class="small muted">Time remaining</div><div id="timer" class="score timer">20:00</div></div></div>
+    <div class="pills"><span class="pill">Maximum score: 10</span><span class="pill">Violations: <span id="violationCount">0</span>/3</span></div>
+    <div id="warningBox" class="notice warning hidden" role="status" aria-live="polite"></div>
+    <p class="statusline">Monitoring is active while this page is open. Events may be blocked by some browsers or assistive technologies.</p>
+  </div>
+  <form id="assessmentForm" class="card">
+    <h2>Section A — Multiple Choice Questions (6 × 1 = 6 marks)</h2>
+    <div class="question"><div class="qtitle">1. The main purpose of a boiler in a thermal power plant is to:</div>
+      <label class="option"><input type="radio" name="q1" value="a"><span>Condense exhaust steam</span></label>
+      <label class="option"><input type="radio" name="q1" value="b"><span>Convert water into steam using heat</span></label>
+      <label class="option"><input type="radio" name="q1" value="c"><span>Increase generator voltage</span></label>
+      <label class="option"><input type="radio" name="q1" value="d"><span>Cool the lubricating oil</span></label></div>
+    <div class="question"><div class="qtitle">2. Which law states that energy cannot be created or destroyed?</div>
+      <label class="option"><input type="radio" name="q2" value="a"><span>Zeroth law of thermodynamics</span></label>
+      <label class="option"><input type="radio" name="q2" value="b"><span>First law of thermodynamics</span></label>
+      <label class="option"><input type="radio" name="q2" value="c"><span>Second law of thermodynamics</span></label>
+      <label class="option"><input type="radio" name="q2" value="d"><span>Newton’s law of cooling</span></label></div>
+    <div class="question"><div class="qtitle">3. In a four-stroke petrol engine, the power stroke occurs once in every:</div>
+      <label class="option"><input type="radio" name="q3" value="a"><span>One crankshaft revolution</span></label>
+      <label class="option"><input type="radio" name="q3" value="b"><span>Two crankshaft revolutions</span></label>
+      <label class="option"><input type="radio" name="q3" value="c"><span>Four crankshaft revolutions</span></label>
+      <label class="option"><input type="radio" name="q3" value="d"><span>Half crankshaft revolution</span></label></div>
+    <div class="question"><div class="qtitle">4. The device that converts heat energy into mechanical work in a steam power plant is the:</div>
+      <label class="option"><input type="radio" name="q4" value="a"><span>Steam turbine</span></label>
+      <label class="option"><input type="radio" name="q4" value="b"><span>Cooling tower</span></label>
+      <label class="option"><input type="radio" name="q4" value="c"><span>Feed pump only</span></label>
+      <label class="option"><input type="radio" name="q4" value="d"><span>Economiser</span></label></div>
+    <div class="question"><div class="qtitle">5. Which component removes heat from exhaust steam and converts it into water?</div>
+      <label class="option"><input type="radio" name="q5" value="a"><span>Superheater</span></label>
+      <label class="option"><input type="radio" name="q5" value="b"><span>Condenser</span></label>
+      <label class="option"><input type="radio" name="q5" value="c"><span>Air preheater</span></label>
+      <label class="option"><input type="radio" name="q5" value="d"><span>Injector</span></label></div>
+    <div class="question"><div class="qtitle">6. The ratio of useful work output to heat supplied in a heat engine is called:</div>
+      <label class="option"><input type="radio" name="q6" value="a"><span>Compression ratio</span></label>
+      <label class="option"><input type="radio" name="q6" value="b"><span>Volumetric efficiency</span></label>
+      <label class="option"><input type="radio" name="q6" value="c"><span>Thermal efficiency</span></label>
+      <label class="option"><input type="radio" name="q6" value="d"><span>Mechanical advantage</span></label></div>
+    <h2>Section B — Short Answer Questions (2 × 2 = 4 marks)</h2>
+    <div class="question"><div class="qtitle">7. State the function of an economiser in a boiler. (2 marks)</div><textarea id="q7" maxlength="1200" placeholder="Write your answer in a few sentences..." required></textarea></div>
+    <div class="question"><div class="qtitle">8. Write any two differences between a petrol (SI) engine and a diesel (CI) engine. (2 marks)</div><textarea id="q8" maxlength="1200" placeholder="Write two clear differences..." required></textarea></div>
+    <div class="notice">Before submitting, check that you have answered all questions. Your answers and monitoring log will be included in the downloadable report.</div>
+    <button type="button" id="submitBtn">Submit assessment</button>
+  </form>
+</section>
+
+<section id="submission" class="card hidden">
+  <h2>Submission successful</h2>
+  <p id="submittedMessage" class="muted"></p>
+  <div class="score"><span id="totalScore">0</span><span class="muted"> / 10</span></div>
+  <p id="gradeNote" class="muted"></p>
+  <div id="scoreBreakdown"></div>
+  <div class="notice warning"><strong>Scoring note:</strong> MCQs are graded exactly. Short-answer scores are provisional keyword-based estimates and should be checked by the instructor. This file stores data only in the current browser session; it does not send results to a server.</div>
+  <div class="row"><button id="downloadReport">Download report (.txt)</button><button class="secondary" id="downloadCsv">Download report (.csv)</button></div>
+  <div class="notice">
+    <strong>Email report to instructor</strong>
+    <p class="small">After you configure the Apps Script endpoint in this file, the report can be emailed to the instructor's Gmail.</p>
+    <button type="button" id="emailReportBtn">Email report to instructor</button>
+    <p id="emailStatus" class="small muted" aria-live="polite"></p>
+  </div>
+  <h3>Monitoring summary</h3><div id="monitorSummary"></div>
+  <button class="secondary" id="printBtn">Print / Save as PDF</button>
+</section>
+<div class="footer">Thermal Engineering Assessment · Standalone HTML demo</div>
+</main>
+<script>
+'use strict';
+// Change this before distributing the HTML file. Client-side access codes are not secure.
+const ACCESS_CODE = "THERMAL10";
+// Paste your deployed Google Apps Script Web App URL here, ending in /exec.
+const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbxCYVBkgJysZDBb3RDhvlb2alT73ntD3Z3-KUErALBFIvywUGOVMYoiGZX81QrqjQL6/exec";
+const DURATION_SECONDS = 20 * 60;
+const ANSWERS = {q1:"b",q2:"b",q3:"b",q4:"a",q5:"b",q6:"c"};
+let student = {name:"",roll:""}, startedAt = null, deadline = null, timerId = null;
+let violations = [], submitted = false, lastWarning = "";
+const $ = id => document.getElementById(id);
+function show(id){$(id).classList.remove('hidden')}
+function hide(id){$(id).classList.add('hidden')}
+function logViolation(type, detail){
+  if(!startedAt || submitted) return;
+  const now = new Date();
+  violations.push({time:now.toLocaleTimeString(),type,detail:detail||""});
+  $('violationCount').textContent = violations.length;
+  const msg = `Warning ${violations.length}/3: ${type}. This event has been logged.`;
+  $('warningBox').textContent = msg; show('warningBox'); lastWarning = msg;
+  if(violations.length >= 3) finishAssessment(true, 'Assessment auto-submitted after three monitoring violations.');
+}
+$('loginForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  if($('accessCode').value !== ACCESS_CODE){alert('Incorrect access code. Please check with your instructor.');return;}
+  student.name = $('studentName').value.trim(); student.roll = $('rollNo').value.trim();
+  if(!student.name || !student.roll || !$('agree').checked) return;
+  $('studentSummary').textContent = `${student.name} · Roll no. ${student.roll}`;
+  hide('login'); show('instructions');
+});
+$('startBtn').addEventListener('click', async ()=>{
+  startedAt = Date.now(); deadline = startedAt + DURATION_SECONDS*1000;
+  hide('instructions'); show('exam');
+  try { if(document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); }
+  catch(e){ logViolation('Fullscreen unavailable or denied','Browser did not allow full-screen mode at start.'); }
+  tick(); timerId = setInterval(tick,250);
+});
+function tick(){
+  if(submitted || !deadline) return;
+  const left = Math.max(0, Math.ceil((deadline-Date.now())/1000));
+  $('timer').textContent = `${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`;
+  if(left<=0) finishAssessment(true,'Time limit reached; assessment was automatically submitted.');
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden) logViolation('Tab or page switched','Document became hidden.');});
+window.addEventListener('blur',()=>logViolation('Window lost focus','Browser window lost focus.'));
+document.addEventListener('fullscreenchange',()=>{if(startedAt && !submitted && !document.fullscreenElement) logViolation('Full-screen exited','Full-screen mode ended.');});
+document.addEventListener('contextmenu',e=>{if(startedAt&&!submitted){e.preventDefault();logViolation('Right-click attempted','Context menu was blocked.');}});
+document.addEventListener('copy',e=>{if(startedAt&&!submitted){e.preventDefault();logViolation('Copy attempted','Copy action was blocked.');}});
+document.addEventListener('cut',e=>{if(startedAt&&!submitted){e.preventDefault();logViolation('Cut attempted','Cut action was blocked.');}});
+document.addEventListener('paste',e=>{if(startedAt&&!submitted){e.preventDefault();logViolation('Paste attempted','Paste action was blocked.');}});
+document.addEventListener('keydown',e=>{
+  if(!startedAt||submitted)return;
+  if((e.ctrlKey||e.metaKey)&&['c','v','x','p','s'].includes(e.key.toLowerCase())){e.preventDefault();logViolation('Restricted keyboard shortcut',e.key); }
+  if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&['i','j','c'].includes(e.key.toLowerCase()))){e.preventDefault();logViolation('Developer tools shortcut attempted',e.key);}
+});
+document.addEventListener('mouseleave',e=>{
+  if(startedAt&&!submitted && (e.clientY<=0 || e.clientX<=0 || e.clientX>=window.innerWidth || e.clientY>=window.innerHeight))
+    logViolation('Pointer left assessment window','Pointer moved outside the page boundary.');
+});
+function getRadio(name){const el=document.querySelector(`input[name="${name}"]:checked`);return el?el.value:"";}
+function keywordScore(text, groups){
+  const normalized=text.toLowerCase();
+  let hits=0; groups.forEach(group=>{if(group.some(k=>normalized.includes(k)))hits++;});
+  return Math.min(2,Math.round(hits/groups.length*2));
+}
+function calculate(){
+  let mcq=0, mcqDetails=[];
+  for(let i=1;i<=6;i++){const chosen=getRadio('q'+i);const correct=chosen===ANSWERS['q'+i];if(correct)mcq++;mcqDetails.push({q:`Q${i}`,answer:chosen||'Not answered',correct,marks:correct?1:0});}
+  const a7=$('q7').value.trim(), a8=$('q8').value.trim();
+  // Keyword grading is intentionally transparent and approximate; faculty should verify manually.
+  const s7=keywordScore(a7,[['heat','flue gas','waste gas','exhaust gas'],['feed water','water'],['preheat','pre-heats','preheating','temperature','efficiency','fuel']]);
+  const s8=keywordScore(a8,[['spark','compression ignition','compression-ignition','ignition'],['spark plug','fuel injector','injector','air only','air is compressed','compression ratio','petrol-air mixture','air-fuel mixture']]);
+  // Empty answers always receive zero.
+  const short7=a7?s7:0, short8=a8?s8:0;
+  return {mcq,mcqDetails,short7,short8,total:mcq+short7+short8,a7,a8};
+}
+function finishAssessment(auto=false,message='Your responses have been recorded in this browser.'){
+  if(submitted)return; submitted=true; if(timerId)clearInterval(timerId);
+  const result=calculate(), finishedAt=new Date();
+  hide('exam');show('submission');
+  $('submittedMessage').textContent=`${message} Student: ${student.name} · Roll no. ${student.roll}.`;
+  $('totalScore').textContent=result.total;
+  $('gradeNote').textContent=`MCQ: ${result.mcq}/6 · Short answers: ${result.short7+result.short8}/4 · Submitted: ${finishedAt.toLocaleString()}`;
+  let html='<h3>Score breakdown</h3><table style="width:100%;border-collapse:collapse"><tr><th style="text-align:left;padding:8px;border-bottom:1px solid #ddd">Question</th><th style="text-align:left;padding:8px;border-bottom:1px solid #ddd">Result</th><th style="text-align:right;padding:8px;border-bottom:1px solid #ddd">Marks</th></tr>';
+  result.mcqDetails.forEach(x=>html+=`<tr><td style="padding:8px;border-bottom:1px solid #eee">${x.q}</td><td style="padding:8px;border-bottom:1px solid #eee">${x.correct?'Correct':x.answer==='Not answered'?'Not answered':'Incorrect'}</td><td style="text-align:right;padding:8px;border-bottom:1px solid #eee">${x.marks}/1</td></tr>`);
+  html+=`<tr><td style="padding:8px">Q7 — Economiser function</td><td style="padding:8px">Provisional keyword score</td><td style="text-align:right;padding:8px">${result.short7}/2</td></tr>`;
+  html+=`<tr><td style="padding:8px">Q8 — SI vs CI differences</td><td style="padding:8px">Provisional keyword score</td><td style="text-align:right;padding:8px">${result.short8}/2</td></tr></table>`;
+  $('scoreBreakdown').innerHTML=html;
+  $('monitorSummary').innerHTML=violations.length?`<p><strong>${violations.length} event(s) logged.</strong></p><ul>${violations.map(v=>`<li>${escapeHtml(v.time)} — ${escapeHtml(v.type)}${v.detail?': '+escapeHtml(v.detail):''}</li>`).join('')}</ul>`:'<p>No monitoring events were logged.</p>';
+  window.assessmentReport={student:{...student},startedAt:new Date(startedAt).toISOString(),finishedAt:finishedAt.toISOString(),automatic:auto,submissionMessage:message,result,violations:[...violations]};
+  try{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});}catch(e){}
+}
+$('submitBtn').addEventListener('click',()=>{if(confirm('Submit your assessment now? You cannot change your answers afterward.'))finishAssessment(false);});
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function reportText(){
+ const r=window.assessmentReport;if(!r)return '';
+ return `THERMAL ENGINEERING ASSESSMENT REPORT\nStudent: ${r.student.name}\nRoll number: ${r.student.roll}\nStarted: ${r.startedAt}\nSubmitted: ${r.finishedAt}\nSubmission type: ${r.automatic?'Automatic':'Manual'}\nTotal score: ${r.result.total}/10\nMCQ score: ${r.result.mcq}/6\nShort-answer provisional score: ${r.result.short7+r.result.short8}/4\n\nMCQ DETAILS\n${r.result.mcqDetails.map(x=>`${x.q}: selected ${x.answer}; ${x.correct?'Correct':'Incorrect'}; ${x.marks}/1`).join('\n')}\n\nSHORT ANSWERS (provisional keyword grading)\nQ7 (${r.result.short7}/2): ${r.result.a7}\nQ8 (${r.result.short8}/2): ${r.result.a8}\n\nMONITORING EVENTS\n${r.violations.length?r.violations.map(v=>`${v.time} | ${v.type} | ${v.detail}`).join('\n'):'No events logged.'}\n\nNote: Browser-only monitoring is not secure proctoring. Short answers require instructor review.`;
+}
+function download(name,content,type){
+ const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+$('downloadReport').addEventListener('click',()=>download(`Thermal_Assessment_${safeName(student.roll)}.txt`,reportText(),'text/plain;charset=utf-8'));
+$('downloadCsv').addEventListener('click',()=>{
+ const r=window.assessmentReport;if(!r)return;
+ const rows=[['Field','Value'],['Student',r.student.name],['Roll number',r.student.roll],['Started',r.startedAt],['Submitted',r.finishedAt],['Total score',`${r.result.total}/10`],['MCQ score',`${r.result.mcq}/6`],['Short answer provisional score',`${r.result.short7+r.result.short8}/4`],['Q7 answer',r.result.a7],['Q7 marks',`${r.result.short7}/2`],['Q8 answer',r.result.a8],['Q8 marks',`${r.result.short8}/2`],['Monitoring events',r.violations.map(v=>`${v.time}: ${v.type} (${v.detail})`).join(' | ')]];
+ const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+ download(`Thermal_Assessment_${safeName(student.roll)}.csv`,'\ufeff'+csv,'text/csv;charset=utf-8');
+});
+function safeName(s){return String(s||'student').replace(/[^a-z0-9_-]/gi,'_');}
+$('printBtn').addEventListener('click',()=>window.print());
+
+$('emailReportBtn').addEventListener('click', async ()=>{
+  const status = $('emailStatus');
+  const r = window.assessmentReport;
+  if (!r) { status.textContent = 'No completed assessment report is available.'; return; }
+  if (!APPS_SCRIPT_ENDPOINT.startsWith('https://script.google.com/macros/s/') || !APPS_SCRIPT_ENDPOINT.endsWith('/exec')) {
+    status.textContent = 'Setup required: paste your deployed Apps Script Web App URL into APPS_SCRIPT_ENDPOINT in this HTML file.';
+    return;
+  }
+  const payload = {
+    student: r.student,
+    startedAt: r.startedAt,
+    finishedAt: r.finishedAt,
+    automatic: r.automatic,
+    submissionMessage: r.submissionMessage,
+    result: r.result,
+    violations: r.violations,
+    reportText: reportText()
+  };
+  status.textContent = 'Sending report to instructor Gmail…';
+  try {
+    // no-cors avoids browser preflight restrictions for this simple cross-origin POST.
+    // The response is opaque, so the browser cannot confirm Gmail delivery.
+    await fetch(APPS_SCRIPT_ENDPOINT, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    status.textContent = 'Request sent. The browser cannot verify delivery; check the instructor Gmail inbox and Spam folder.';
+  } catch (err) {
+    status.textContent = 'Could not send the request. Check internet access and the Apps Script Web App URL.';
+  }
+});
+</script>
+</body>
+</html>
